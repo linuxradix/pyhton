@@ -1,17 +1,9 @@
 # -*- coding: utf-8 -*-
 
 
-
 from PyQt4 import QtCore, QtGui
-import threading
-import schedule
 
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
-import time, sys
-import subprocess
-global itm
-itm = []
+
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
@@ -25,6 +17,7 @@ try:
 except AttributeError:
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
+
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -73,8 +66,6 @@ class Ui_MainWindow(object):
         self.pushButton = QtGui.QPushButton(self.groupBox)
         self.pushButton.setGeometry(QtCore.QRect(130, 180, 111, 35))
         self.pushButton.setObjectName(_fromUtf8("pushButton"))
-        self.pushButton.clicked.connect(self.input_val)
-        self.pushButton.clicked.connect(self.input_val)
         self.pushButton_2 = QtGui.QPushButton(self.groupBox)
         self.pushButton_2.setGeometry(QtCore.QRect(500, 670, 92, 35))
         self.pushButton_2.setObjectName(_fromUtf8("pushButton_2"))
@@ -113,8 +104,9 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow", None))
         self.groupBox.setTitle(_translate("MainWindow", "GroupBox", None))
-        self.label_2.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:12pt; font-weight:600;\">Enter URL :</span></p></body></html>", None))
-        self.label.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:18pt; font-weight:600;\">Zillow Scraper</span></p></body></html>", None))
+        self.label_2.setText(_translate("MainWindow", '<html><head/><body><p><span style=" font-size:12pt; font-weight:600;">Enter URL :</span></p></body></html>', None))
+        self.label.setText(_translate("MainWindow", '<html><head/><body><p><span style=" font-size:18pt; font-weight:600;">Zillow Scraper</span></p></body></html>', None)
+        )
         self.label_3.setText(_translate("MainWindow", "<html><head/><body><p>URL processing</p></body></html>", None))
         self.label_4.setText(_translate("MainWindow", "<html><head/><body><p>Scraping Info</p></body></html>", None))
         self.pushButton.setText(_translate("MainWindow", "Start Scraping", None))
@@ -125,24 +117,74 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_4), _translate("MainWindow", "Tab 2", None))
 
 
+class Timer(QtCore.QObject):
+    timeout = QtCore.pyqtSignal(int)
+    finished = QtCore.pyqtSignal()
 
-    def input_val(self):
+    def __init__(self, parent=None, **kwargs):
+        self._maximum = kwargs.pop("maximum", 0)
+        _interval = kwargs.pop("interval", 0)
+        _timeout = kwargs.pop("timeout", None)
+        _finished = kwargs.pop("finished", None)
 
-        for i in range(5):
+        if parent is not None:
+            kwargs["parent"] = parent
+        super(Timer, self).__init__(**kwargs)
+        self._counter = 0
+        self._timer = QtCore.QTimer(timeout=self._on_timeout)
+        self.interval = _interval
+        if _timeout:
+            self.timeout.connect(_timeout)
+        if _finished:
+            self.timeout.connect(_finished)
 
-            time.sleep(1)
-            self.listWidget_2.addItem(str(i))
+    @QtCore.pyqtSlot()
+    def start(self):
+        self._timer.start()
+
+    @property
+    def interval(self):
+        return self._timer.interval()
+
+    @interval.setter
+    def interval(self, v):
+        self._timer.setInterval(v)
+
+    @property
+    def maximum(self):
+        return self._maximum
+
+    @maximum.setter
+    def maximum(self, v):
+        self._maximum = v
+
+    @QtCore.pyqtSlot()
+    def _on_timeout(self):
+        self.timeout.emit(self._counter)
+        self._counter += 1
+        if self._counter >= self.maximum:
+            self.finished.emit()
+            self._timer.stop()
 
 
+# https://www.riverbankcomputing.com/static/Docs/PyQt4/designer.html#using-the-generated-code
+class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
+    def __init__(self, parent=None):
+        super(MainWindow, self).__init__(parent)
+        self.setupUi(self)
 
+        t = Timer(self, maximum=500, interval=1000, timeout=self.onTimeout)
+        t.start()
+
+    @QtCore.pyqtSlot(int)
+    def onTimeout(self, i):
+        self.listWidget_2.addItem(str(i))
 
 
 if __name__ == "__main__":
     import sys
-    app = QtGui.QApplication(sys.argv)
-    MainWindow = QtGui.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
-    sys.exit(app.exec_())
 
+    app = QtGui.QApplication(sys.argv)
+    w = MainWindow()
+    w.show()
+    sys.exit(app.exec_())
