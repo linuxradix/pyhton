@@ -8,27 +8,19 @@
 
 from PyQt4 import QtCore, QtGui
 import time
-
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-
     def _fromUtf8(s):
         return s
 
-
 try:
     _encoding = QtGui.QApplication.UnicodeUTF8
-
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig, _encoding)
-
-
 except AttributeError:
-
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
-
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -42,7 +34,7 @@ class Ui_MainWindow(object):
         self.pushButton = QtGui.QPushButton(self.centralwidget)
         self.pushButton.setGeometry(QtCore.QRect(30, 40, 92, 35))
         self.pushButton.setObjectName(_fromUtf8("pushButton"))
-
+        self.pushButton.clicked.connect(self.testfuc)
         self.label = QtGui.QLabel(self.centralwidget)
         self.label.setGeometry(QtCore.QRect(60, 120, 101, 41))
         self.label.setObjectName(_fromUtf8("label"))
@@ -67,72 +59,20 @@ class Ui_MainWindow(object):
         self.label.setText(_translate("MainWindow", "function output", None))
 
 
-class Timer(QtCore.QObject):
-    timeout = QtCore.pyqtSignal(int)
-    finished = QtCore.pyqtSignal()
+    def testfuc(self):
 
-    def __init__(self, parent=None, **kwargs):
-        self._maximum = kwargs.pop("maximum", 0)
-        _interval = kwargs.pop("interval", 0)
-        _timeout = kwargs.pop("timeout", None)
-        _finished = kwargs.pop("finished", None)
-
-        if parent is not None:
-            kwargs["parent"] = parent
-        super(Timer, self).__init__(**kwargs)
-        self._counter = 0
-        self._timer = QtCore.QTimer(timeout=self._on_timeout)
-        self.interval = _interval
-        if _timeout:
-            self.timeout.connect(_timeout)
-        if _finished:
-            self.timeout.connect(_finished)
-
-    @QtCore.pyqtSlot()
-    def start(self):
-        self._timer.start()
-
-    @property
-    def interval(self):
-        return self._timer.interval()
-
-    @interval.setter
-    def interval(self, v):
-        self._timer.setInterval(v)
-
-    @property
-    def maximum(self):
-        return self._maximum
-
-    @maximum.setter
-    def maximum(self, v):
-        self._maximum = v
-
-    @QtCore.pyqtSlot()
-    def _on_timeout(self):
-        self.timeout.emit(self._counter)
-        self._counter += 1
-        if self._counter >= self.maximum:
-            self.finished.emit()
-            self._timer.stop()
-
-
-class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
-    def __init__(self, parent=None):
-        super(MainWindow, self).__init__(parent)
-        self.setupUi(self)
-        t = Timer(self, maximum=500, interval=1000, timeout=self.testfuc)
-        self.pushButton.clicked.connect(t.start)
-
-    def testfuc(self, i):
-        name = self.textEdit.toPlainText()
-        self.listWidget.addItem(("%s %d") % (name, i))
+        for i in range(5):
+            name = self.textEdit.toPlainText()
+            self.listWidget.addItem(("%s %d") % (name,i))
+            time.sleep(1)
 
 
 if __name__ == "__main__":
     import sys
-
     app = QtGui.QApplication(sys.argv)
-    w = MainWindow()
-    w.show()
+    MainWindow = QtGui.QMainWindow()
+    ui = Ui_MainWindow()
+    ui.setupUi(MainWindow)
+    MainWindow.show()
     sys.exit(app.exec_())
+
